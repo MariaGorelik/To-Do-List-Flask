@@ -75,4 +75,6 @@ def load_user(user_id):
 
 
 if __name__ == '__main__':
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.run(debug=True)
