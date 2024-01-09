@@ -3,15 +3,9 @@ from flask import Flask, render_template, request, redirect, url_for, session
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'project12345'
 
-users_data = {
-    'user1': 'password1',
-    'user2': 'password2'
-}
+users_data = {}
 
-notes = {
-    'user1': [],
-    'user2': []
-}
+notes = {}
 
 
 def check_user(username, password):
@@ -51,6 +45,21 @@ def login():
             return redirect(url_for('main_page'))
         return render_template('login.html', error_message='Неверное имя пользователя или пароль')
     return render_template('login.html')
+
+
+
+@app.route('/sign_up', methods=['GET', 'POST'])
+def sign_up():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if username not in users_data:
+            users_data[username] = password
+            notes[username] = []
+            session['username'] = username
+            return redirect(url_for('main_page'))
+        return render_template('sign_up.html', error_message='This username already exists')
+    return render_template('sign_up.html')
 
 
 @app.route('/logout')

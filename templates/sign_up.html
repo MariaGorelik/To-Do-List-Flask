@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Вход</title>
+    <title>Регистрация</title>
 </head>
 <body>
-    <h1>Вход</h1>
+    <h1>Регистрация</h1>
     {% if error_message %}
     <p style="color: red;">{{ error_message }}</p>
     {% endif %}
-    <form method="POST" action="{{ url_for('login') }}">
+    <form method="POST" action="{{ url_for('sign_up') }}">
         <label for="username">Имя пользователя:</label>
         <input type="text" id="username" name="username" required><br><br>
 
         <label for="password">Пароль:</label>
         <input type="password" id="password" name="password" required><br><br>
 
-        <input type="submit" value="Войти">
+        <input type="submit" value="Register">
     </form>
-<a href="{{ url_for('sign_up') }}">Sign up</a>
+<a href="{{ url_for('login') }}">Sign in</a>
 </body>
 </html>
