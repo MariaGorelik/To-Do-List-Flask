@@ -36,8 +36,8 @@ def main_page():
 
 @app.route('/delete-note/<int:note_index>/')
 def delete_note(note_index):
-    if note_index < len(notes):
-        del notes[note_index]
+    if note_index < len(notes[session['username']]):
+        del notes[session['username']][note_index]
     return redirect(url_for('main_page'))
 
 
