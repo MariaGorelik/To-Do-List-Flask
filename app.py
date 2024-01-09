@@ -1,77 +1,65 @@
-from flask import Flask, render_template, request, redirect, url_for
-from flask_login import UserMixin, LoginManager, login_user, login_required, logout_user
+from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'project12345'
 
 notes = []
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+users_data = {
+    'user1': 'password1',
+    'user2': 'password2'
+}
 
 
-class User(UserMixin):
-    def __init__(self, username, password):
-        self.id = username
-        self.username = username
-        self.password = password
+def check_user(username, password):
+    # Здесь можно реализовать проверку данных пользователя на сервере
+    # В этом примере мы храним данные пользователей в словаре на сервере
+    if username in users_data and users_data[username] == password:
+        return True
+    return False
 
 
-@login_required
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        note = request.form.get('note')
-        if note:
-            notes.append(note)
-            return redirect(url_for('index'))
-    return render_template('index.html', notes=notes, enumerate=enumerate)
+@app.route('/main_page', methods=['GET', 'POST'])
+def main_page():
+    if 'username' in session:
+        if request.method == 'POST':
+            note = request.form.get('note')
+            if note:
+                notes.append(note)
+                return redirect(url_for('main_page'))
+        return render_template('index.html', notes=notes, enumerate=enumerate)
+    return redirect(url_for('login'))
 
 
-@login_required
 @app.route('/delete-note/<int:note_index>/')
 def delete_note(note_index):
     if note_index < len(notes):
         del notes[note_index]
-    return redirect(url_for('index'))
+    return redirect(url_for('main_page'))
 
 
-users = {
-    'user1': User('user1', 'password1'),
-    'user2': User('user2', 'password2')
-}
-
-
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = users.get(username)
-        if user and user.password == password:
-            login_user(user)
-            return redirect(url_for('index'))
-        else:
-            return 'Invalid username or password'
+        username = request.form['username']
+        password = request.form['password']
+        if check_user(username, password):
+            session['username'] = username
+            return redirect(url_for('main_page'))
+        return render_template('login.html', error_message='Неверное имя пользователя или пароль')
     return render_template('login.html')
 
 
 @app.route('/logout')
-@login_required
+# @login_required
 def logout():
-    logout_user()
+    session.pop('username', None)
     return redirect(url_for('login'))
 
 
 @app.errorhandler(404)
 def page_not_found(e):
     return "Page not found", 404
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return users.get(user_id)
 
 
 if __name__ == '__main__':
