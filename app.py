@@ -3,11 +3,14 @@ from flask import Flask, render_template, request, redirect, url_for, session
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'project12345'
 
-notes = []
-
 users_data = {
     'user1': 'password1',
     'user2': 'password2'
+}
+
+notes = {
+    'user1': [],
+    'user2': []
 }
 
 
@@ -25,9 +28,9 @@ def main_page():
         if request.method == 'POST':
             note = request.form.get('note')
             if note:
-                notes.append(note)
+                notes[session['username']].append(note)
                 return redirect(url_for('main_page'))
-        return render_template('index.html', notes=notes, enumerate=enumerate)
+        return render_template('index.html', notes=notes[session['username']], enumerate=enumerate)
     return redirect(url_for('login'))
 
 
