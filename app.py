@@ -1,37 +1,55 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'project12345'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 
-users_data = {}
+db = SQLAlchemy(app)
 
-notes = {}
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(50), nullable=False)
+
+
+class Note(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+
+
+db.create_all()
 
 
 def check_user(username, password):
-    # Здесь можно реализовать проверку данных пользователя на сервере
-    # В этом примере мы храним данные пользователей в словаре на сервере
-    if username in users_data and users_data[username] == password:
-        return True
-    return False
+    user = User.query.filter_by(username=username, password=password).first()
+    return user is not None
 
 
 @app.route('/main_page', methods=['GET', 'POST'])
 def main_page():
     if 'username' in session:
+        user = User.query.filter_by(username=session['username']).first()
         if request.method == 'POST':
             note = request.form.get('note')
             if note:
-                notes[session['username']].append(note)
+                new_note = Note(user_id=user.id, content=note)
+                db.session.add(new_note)
+                db.session.commit()
                 return redirect(url_for('main_page'))
-        return render_template('index.html', notes=notes[session['username']], enumerate=enumerate)
+        notes = Note.query.filter_by(user_id=user.id).all()
+        return render_template('index.html', notes=notes, enumerate=enumerate)
     return redirect(url_for('login'))
 
 
-@app.route('/delete-note/<int:note_index>/')
-def delete_note(note_index):
-    if note_index < len(notes[session['username']]):
-        del notes[session['username']][note_index]
+@app.route('/delete-note/<int:note_id>/')
+def delete_note(note_id):
+    note = Note.query.get(note_id)
+    if note:
+        db.session.delete(note)
+        db.session.commit()
     return redirect(url_for('main_page'))
 
 
@@ -47,15 +65,15 @@ def login():
     return render_template('login.html')
 
 
-
 @app.route('/sign_up', methods=['GET', 'POST'])
 def sign_up():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if username not in users_data:
-            users_data[username] = password
-            notes[username] = []
+        if User.query.filter_by(username=username).first() is None:
+            new_user = User(username=username, password=password)
+            db.session.add(new_user)
+            db.session.commit()
             session['username'] = username
             return redirect(url_for('main_page'))
         return render_template('sign_up.html', error_message='This username already exists')
