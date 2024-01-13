@@ -95,4 +95,4 @@ def page_not_found(e):
 if __name__ == '__main__':
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
