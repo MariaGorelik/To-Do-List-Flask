@@ -10,11 +10,11 @@ services:
     depends_on:
       - db
     volumes:
-      - ./ToDoList:/app  # Полный путь к проекту на вашем локальном компьютере
+      - ./ToDoList:/app
 
   db:
     build:
       context: .
       dockerfile: Dockerfile.db
     volumes:
-      - ./ToDoList:/db   # Полный путь к проекту на вашем локальном компьютере
+      - ./ToDoList:/models
